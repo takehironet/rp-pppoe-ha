@@ -230,6 +230,8 @@ session(PPPoEConnection *conn)
     struct timeval *tvp = NULL;
     int maxFD = 0;
     int r;
+    FILE *sessidfile = NULL;
+    int sessidfile_wrote = 0;
 
     /* Drop privileges */
     dropPrivs();
@@ -249,6 +251,26 @@ session(PPPoEConnection *conn)
     packet.session = conn->session;
 
     initPPP();
+
+    /* Dump session id to specified file if enabled */
+    if (conn->dumpSessionId) {
+	sessidfile = fopen(conn->sessionIdFile, "w");
+        if (sessidfile) {
+	    sessidfile_wrote = fprintf(sessidfile, "%hu",
+					(unsigned short) ntohs(packet.session));
+	    if (sessidfile_wrote < 0) {
+	        syslog(LOG_ERR, "Cannot write session id %hu to \"%s\"",
+			(unsigned short) ntohs(packet.session),
+			conn->sessionIdFile);
+	    }
+            fclose(sessidfile);
+	} else {
+	    syslog(LOG_ERR, "Cannot open session id file \"%s\" for session %hu",
+		   conn->sessionIdFile,
+		   (unsigned short) ntohs(conn->session));
+	}
+	sessidfile = NULL;
+    }
 
 #ifdef USE_BPF
     /* check for buffered session data */
@@ -374,6 +396,7 @@ usage(char const *argv0)
 	    "   -m MSS         -- Clamp incoming and outgoing MSS options.\n"
 	    "   -p pidfile     -- Write process-ID to pidfile.\n"
 	    "   -e sess:mac    -- Skip discovery phase; use existing session.\n"
+	    "   -i sessidfile  -- Write session-ID to sessidfile.\n"
 	    "   -n             -- Do not open discovery socket.\n"
 	    "   -k             -- Kill a session with PADT (requires -e)\n"
 	    "   -d             -- Perform discovery, print session info and exit.\n"
@@ -432,9 +455,9 @@ main(int argc, char *argv[])
     openlog("pppoe", LOG_PID, LOG_DAEMON);
 
 #ifdef DEBUGGING_ENABLED
-    options = "I:VAT:D:hS:C:Usm:np:e:kdf:F:t:";
+    options = "I:VAT:D:hS:C:Usm:np:e:i:kdf:F:t:";
 #else
-    options = "I:VAT:hS:C:Usm:np:e:kdf:F:t:";
+    options = "I:VAT:hS:C:Usm:np:e:i:kdf:F:t:";
 #endif
     while((opt = getopt(argc, argv, options)) != -1) {
 	switch(opt) {
@@ -501,6 +524,13 @@ main(int argc, char *argv[])
 
 	    /* Skip discovery phase! */
 	    conn.skipDiscovery = 1;
+	    break;
+
+	case 'i':
+	    /* Dump session ID */
+	    conn.dumpSessionId = 1;
+	    /* File path of session ID */
+	    SET_STRING(conn.sessionIdFile, optarg);
 	    break;
 
 	case 'p':

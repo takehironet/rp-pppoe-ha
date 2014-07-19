@@ -289,9 +289,11 @@ typedef struct PPPoEConnectionStruct {
     char *ifName;		/* Interface name */
     char *serviceName;		/* Desired service name, if any */
     char *acName;		/* Desired AC name, if any */
+    char *sessionIdFile;	/* Session ID file path */
     int synchronous;		/* Use synchronous PPP */
     int useHostUniq;		/* Use Host-Uniq tag */
     int printACNames;		/* Just print AC names */
+    int dumpSessionId;		/* Dump SessionID */
     int skipDiscovery;		/* Skip discovery */
     int noDiscoverySocket;	/* Don't even open discovery socket */
     int killSession;		/* Kill session and exit */
