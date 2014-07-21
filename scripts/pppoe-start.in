@@ -139,6 +139,13 @@ if [ -r "$PIDFILE" ] ; then
     fi
     # Delete bogus PIDFILE
     rm -f "$PIDFILE" "$PIDFILE.pppd" "$PIDFILE.pppoe" "$PIDFILE.start"
+
+    # Delete bogus SESSIONID
+    if [ "${SESSIONID-UNDEF}" != "UNDEF" ]; then
+        if [ -e "$SESSIONID" ]; then
+            rm -f "$SESSIONID"
+        fi
+    fi
 fi
 
 echo $$ > $PIDFILE.start

@@ -228,6 +228,16 @@ if test "$MRU" = "" ; then
     MRU=1492
 fi
 
+# Session ID file output configuration
+SESSIONID_EXPORT=""
+if [ "${SESSIONID-UNDEF}" != "UNDEF" ]; then
+    sessionid_path=$(readlink -f "${SESSIONID}")
+    sessionid_dir=$(dirname "${sessionid_path}")
+    if [ -e "${sessionid_dir}" -a -d "${sessionid_dir}" ]; then
+        SESSIONID_EXPORT="-i \"${sessionid_path}\""
+    fi
+fi
+
 # Standard PPP options we always use
 PPP_STD_OPTIONS="$PLUGIN_OPTS $DOUNIT noipdefault noauth default-asyncmap $DEFAULTROUTE hide-password nodetach $PEERDNS mtu $MTU mru $MRU noaccomp nodeflate nopcomp novj novjccomp user $USER lcp-echo-interval $LCP_INTERVAL lcp-echo-failure $LCP_FAILURE $PPPD_EXTRA"
 
@@ -246,7 +256,7 @@ elif test "$DNSTYPE" = "SPECIFY" ; then
 fi
 
 # PPPoE invocation
-PPPOE_CMD="$PPPOE -p $PPPOE_PIDFILE -I $ETH -T $PPPOE_TIMEOUT -U $PPPOE_SYNC $CLAMPMSS $ACNAME $SERVICENAMEOPT $PPPOE_EXTRA"
+PPPOE_CMD="$PPPOE -p $PPPOE_PIDFILE -I $ETH -T $PPPOE_TIMEOUT -U $PPPOE_SYNC $CLAMPMSS $ACNAME $SERVICENAMEOPT $SESSIONID_EXPORT $PPPOE_EXTRA"
 if test "$DEBUG" != "" ; then
     if test "$DEMAND" != "" ; then
 	echo "(Turning off DEMAND for debugging purposes)"

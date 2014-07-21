@@ -93,4 +93,11 @@ else
     exit 1
 fi
 
+# Delete SESSIONID
+if [ "${SESSIONID-UNDEF}" != "UNDEF" ]; then
+    if [ -e "$SESSIONID" ]; then
+        rm -f "$SESSIONID"
+    fi
+fi
+
 exit 0
